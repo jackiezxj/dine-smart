@@ -1,0 +1,177 @@
+import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { Utensils, Database } from 'lucide-react';
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'checking' | 'success' | 'error'>('idle');
+  const navigate = useNavigate();
+
+  const handleTestConnection = async () => {
+    setConnectionStatus('checking');
+    try {
+      // 尝试查询 dishes 表的一条数据，仅仅是为了测试连接
+      // 如果表是空的也没关系，只要不报错就说明连接成功
+      const { error } = await supabase.from('dishes').select('count', { count: 'exact', head: true });
+      
+      if (error) {
+        console.error('Connection test failed:', error);
+        throw error;
+      }
+      
+      setConnectionStatus('success');
+      setTimeout(() => setConnectionStatus('idle'), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setConnectionStatus('error');
+      alert(`连接失败: ${err.message || '未知错误'}\n请检查 .env 配置是否正确`);
+    }
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (isRegister) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { username: email.split('@')[0] }
+          }
+        });
+        if (error) throw error;
+        alert('注册成功！请登录。');
+        setIsRegister(false);
+      } else {
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+
+        const userId = authData?.user?.id;
+
+        if (!userId) {
+          navigate('/app');
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', userId)
+          .single();
+
+        if (profileError) {
+          navigate('/app');
+          return;
+        }
+
+        if (profile?.is_admin) {
+          navigate('/admin');
+        } else {
+          navigate('/app');
+        }
+      }
+    } catch (error: any) {
+      console.error(error);
+      // For demo purposes, allow bypass if Supabase is not configured
+      if (error.message.includes('apikey') || error.message.includes('URL')) {
+         alert('演示模式：检测到 Supabase 未配置，将使用模拟登录进入系统。');
+         localStorage.setItem('demo_user', 'true');
+         navigate('/app');
+      } else {
+         alert(error.message || '登录失败');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+        <div className="flex flex-col items-center mb-8">
+          <div className="bg-blue-600 p-3 rounded-full mb-4">
+            <Utensils className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">吃什么？</h1>
+          <p className="text-gray-500 mt-2">解决您的每一餐选择困难</p>
+        </div>
+
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="user@example.com"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? '处理中...' : (isRegister ? '注册账号' : '立即登录')}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setIsRegister(!isRegister)}
+            className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+          >
+            {isRegister ? '已有账号？去登录' : '没有账号？去注册'}
+          </button>
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-gray-100 flex justify-center gap-4 text-xs">
+             <button 
+                onClick={() => navigate('/admin')}
+                className="text-gray-400 hover:text-gray-600"
+             >
+                管理员入口
+             </button>
+             <span className="text-gray-300">|</span>
+             <button 
+                onClick={handleTestConnection}
+                disabled={connectionStatus === 'checking'}
+                className={`flex items-center gap-1 ${
+                  connectionStatus === 'success' ? 'text-green-600' : 
+                  connectionStatus === 'error' ? 'text-red-500' : 
+                  'text-gray-400 hover:text-blue-600'
+                }`}
+             >
+                <Database className="w-3 h-3" />
+                {connectionStatus === 'checking' ? '连接中...' : 
+                 connectionStatus === 'success' ? '连接成功' : 
+                 connectionStatus === 'error' ? '连接失败' : '测试数据库连接'}
+             </button>
+        </div>
+      </div>
+    </div>
+  );
+}
