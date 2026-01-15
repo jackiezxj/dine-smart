@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Utensils, Database } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -95,7 +96,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <>
+      <Helmet>
+        <title>登录 - 吃什么？智能餐食推荐系统</title>
+        <meta name="description" content="登录吃什么？智能餐食推荐系统，解决您的每一餐选择困难，获取个性化的美食推荐。" />
+        <meta name="keywords" content="智能餐食推荐, 美食推荐, 餐饮选择, 登录" />
+        <meta name="author" content="DineSmart" />
+        <meta property="og:title" content="登录 - 吃什么？智能餐食推荐系统" />
+        <meta property="og:description" content="登录吃什么？智能餐食推荐系统，解决您的每一餐选择困难，获取个性化的美食推荐。" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://dinesmart.example.com/" />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="flex flex-col items-center mb-8">
           <div className="bg-blue-600 p-3 rounded-full mb-4">
@@ -173,5 +185,6 @@ export default function Login() {
         </div>
       </div>
     </div>
+    </>
   );
 }

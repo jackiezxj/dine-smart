@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { MealRecord } from '@/types';
+import { Helmet } from 'react-helmet-async';
 
 export default function AdminChoices() {
   const navigate = useNavigate();
@@ -45,7 +46,18 @@ export default function AdminChoices() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <>
+      <Helmet>
+        <title>管理员后台 - 用户选择记录</title>
+        <meta name="description" content="管理员后台，用于查看和管理用户的餐食选择记录。" />
+        <meta name="keywords" content="管理员后台, 用户选择记录, 餐食记录管理" />
+        <meta name="author" content="DineSmart" />
+        <meta property="og:title" content="管理员后台 - 用户选择记录" />
+        <meta property="og:description" content="管理员后台，用于查看和管理用户的餐食选择记录。" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://dinesmart.example.com/admin/choices" />
+      </Helmet>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm p-4 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -181,6 +193,7 @@ export default function AdminChoices() {
         )}
       </main>
     </div>
+    </>
   );
 }
 

@@ -4,6 +4,7 @@ import { DishCard } from '@/components/DishCard';
 import { Dish } from '@/types';
 import { Check, X, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 export default function UserHome() {
   const navigate = useNavigate();
@@ -113,7 +114,18 @@ export default function UserHome() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <>
+      <Helmet>
+        <title>智能餐食推荐 - 吃什么？</title>
+        <meta name="description" content="吃什么？智能餐食推荐系统，根据您的营养需求和口味偏好，为您推荐合适的餐食选择。" />
+        <meta name="keywords" content="智能餐食推荐, 美食推荐, 餐饮选择, 营养均衡" />
+        <meta name="author" content="DineSmart" />
+        <meta property="og:title" content="智能餐食推荐 - 吃什么？" />
+        <meta property="og:description" content="吃什么？智能餐食推荐系统，根据您的营养需求和口味偏好，为您推荐合适的餐食选择。" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://dinesmart.example.com/app" />
+      </Helmet>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm p-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
           <h1 className="font-bold text-lg text-gray-800">今天吃什么？</h1>
@@ -224,5 +236,6 @@ export default function UserHome() {
         )}
       </main>
     </div>
+    </>
   );
 }

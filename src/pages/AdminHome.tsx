@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Dish } from '@/types';
+import { Helmet } from 'react-helmet-async';
 
 export default function AdminHome() {
   const navigate = useNavigate();
@@ -356,7 +357,18 @@ export default function AdminHome() {
     }
   };
   return (
-    <div className="min-h-screen bg-gray-100">
+    <>
+      <Helmet>
+        <title>管理员后台 - 菜品录入</title>
+        <meta name="description" content="管理员后台，用于录入和管理菜品信息，设置营养摄入标准。" />
+        <meta name="keywords" content="管理员后台, 菜品录入, 菜品管理, 营养标准设置" />
+        <meta name="author" content="DineSmart" />
+        <meta property="og:title" content="管理员后台 - 菜品录入" />
+        <meta property="og:description" content="管理员后台，用于录入和管理菜品信息，设置营养摄入标准。" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://dinesmart.example.com/admin" />
+      </Helmet>
+      <div className="min-h-screen bg-gray-100">
       <div className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -624,5 +636,6 @@ export default function AdminHome() {
         </div>
       </main>
     </div>
+    </>
   );
 }

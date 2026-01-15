@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { MealRecord } from '@/types';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 export default function UserHistory() {
   const navigate = useNavigate();
@@ -65,7 +66,18 @@ export default function UserHistory() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <>
+      <Helmet>
+        <title>历史餐食记录 - 吃什么？</title>
+        <meta name="description" content="查看您的历史餐食记录，管理和评价您的餐食选择，跟踪您的饮食习惯。" />
+        <meta name="keywords" content="历史餐食记录, 餐食管理, 饮食习惯, 营养跟踪" />
+        <meta name="author" content="DineSmart" />
+        <meta property="og:title" content="历史餐食记录 - 吃什么？" />
+        <meta property="og:description" content="查看您的历史餐食记录，管理和评价您的餐食选择，跟踪您的饮食习惯。" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://dinesmart.example.com/history" />
+      </Helmet>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm p-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -183,6 +195,7 @@ export default function UserHistory() {
         )}
       </main>
     </div>
+    </>
   );
 }
 
