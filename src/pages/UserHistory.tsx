@@ -5,6 +5,13 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
+// 添加GA类型声明，避免TypeScript错误
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 export default function UserHistory() {
   const navigate = useNavigate();
   const [records, setRecords] = useState<MealRecord[]>([]);
@@ -59,6 +66,17 @@ export default function UserHistory() {
           prev.map(r => (r.id === selected.id ? { ...r, evaluation } : r))
         );
         setSelected(prev => (prev ? { ...prev, evaluation } : prev));
+        
+        // 上报GA自定义事件
+        if (window.gtag) {
+          window.gtag('event', 'meal_evaluation', {
+            'event_category': 'user_interaction',
+            'event_label': selected.dish_name,
+            'value': evaluation.length > 0 ? 1 : 0,
+            'dish_id': selected.dish_id,
+            'evaluation_length': evaluation.length
+          });
+        }
       }
     } finally {
       setSaving(false);
