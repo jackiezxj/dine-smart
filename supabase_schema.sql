@@ -78,3 +78,19 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- 5. API Keys Table for AI services
+create table api_keys (
+  id uuid default uuid_generate_v4() primary key,
+  service_name text not null,
+  api_key text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- API Keys: Admin only access
+alter table api_keys enable row level security;
+create policy "Admins can manage API keys." on api_keys using (exists (select 1 from profiles where id = auth.uid() and is_admin = true));
+create policy "Admins can insert API keys." on api_keys for insert with check (exists (select 1 from profiles where id = auth.uid() and is_admin = true));
+create policy "Admins can update API keys." on api_keys for update using (exists (select 1 from profiles where id = auth.uid() and is_admin = true));
+create policy "Admins can delete API keys." on api_keys for delete using (exists (select 1 from profiles where id = auth.uid() and is_admin = true));

@@ -4,6 +4,8 @@ import UserHome from './pages/UserHome';
 import AdminHome from './pages/AdminHome';
 import UserHistory from './pages/UserHistory';
 import AdminChoices from './pages/AdminChoices';
+import AdminImageGeneration from './pages/AdminImageGeneration';
+import ZenProductivity from './pages/ZenProductivity';
 
 // Simple Auth Guard
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
@@ -38,6 +40,8 @@ function App() {
         />
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/admin/choices" element={<AdminChoices />} />
+        <Route path="/admin/image-generation" element={<AdminImageGeneration />} />
+        <Route path="/zen" element={<ZenProductivity />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

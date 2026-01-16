@@ -385,6 +385,12 @@ export default function AdminHome() {
                 用户选择记录
               </button>
               <button
+                onClick={() => navigate('/admin/image-generation')}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                图片生成
+              </button>
+              <button
                 onClick={handleLogout}
                 className="text-sm text-gray-500 hover:text-gray-800"
               >
