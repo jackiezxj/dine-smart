@@ -4,6 +4,7 @@ import { MealRecord } from '@/types';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import posthog from 'posthog-js';
 
 // 添加GA类型声明，避免TypeScript错误
 declare global {
@@ -77,6 +78,14 @@ export default function UserHistory() {
             'evaluation_length': evaluation.length
           });
         }
+        
+        // 上报PostHog事件
+        posthog.capture('meal_evaluation', {
+          'dish_name': selected.dish_name,
+          'dish_id': selected.dish_id,
+          'evaluation_length': evaluation.length,
+          'is_evaluation_submitted': evaluation.length > 0
+        });
       }
     } finally {
       setSaving(false);
