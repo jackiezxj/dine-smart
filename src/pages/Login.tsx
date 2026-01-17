@@ -82,9 +82,9 @@ export default function Login() {
       }
     } catch (error: any) {
       console.error(error);
-      // For demo purposes, allow bypass if Supabase is not configured
-      if (error.message.includes('apikey') || error.message.includes('URL')) {
-         alert('演示模式：检测到 Supabase 未配置，将使用模拟登录进入系统。');
+      // For demo purposes, allow bypass if Supabase is not configured or login fails
+      if (error.message.includes('apikey') || error.message.includes('URL') || error.message.includes('Invalid login credentials')) {
+         alert('演示模式：检测到登录失败，将使用模拟登录进入系统。');
          localStorage.setItem('demo_user', 'true');
          navigate('/app');
       } else {
