@@ -24,6 +24,13 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path,
       },
+      // 为/api/image-generation路径添加代理，解决旧代码的兼容性问题
+      '/api/image-generation': {
+        target: 'https://dashscope.aliyuncs.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => '/api/v1/images/generations',
+      },
     },
   },
 })
