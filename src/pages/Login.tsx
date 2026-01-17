@@ -38,7 +38,10 @@ export default function Login() {
     setLoading(true);
 
     try {
+      console.log('开始认证流程:', { email, isRegister });
+      
       if (isRegister) {
+        console.log('开始注册流程');
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -50,19 +53,26 @@ export default function Login() {
         alert('注册成功！请登录。');
         setIsRegister(false);
       } else {
+        console.log('开始登录流程');
         const { data: authData, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          console.error('登录错误:', error);
+          throw error;
+        }
 
+        console.log('登录成功，获取用户信息:', authData);
         const userId = authData?.user?.id;
 
         if (!userId) {
+          console.error('无法获取用户ID');
           navigate('/app');
           return;
         }
 
+        console.log('获取用户ID成功:', userId);
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('is_admin')
@@ -70,21 +80,25 @@ export default function Login() {
           .single();
 
         if (profileError) {
+          console.error('获取用户资料错误:', profileError);
           navigate('/app');
           return;
         }
 
+        console.log('获取用户资料成功:', profile);
         if (profile?.is_admin) {
+          console.log('用户是管理员，跳转到管理员页面');
           navigate('/admin');
         } else {
+          console.log('用户是普通用户，跳转到普通用户页面');
           navigate('/app');
         }
       }
     } catch (error: any) {
-      console.error(error);
-      // For demo purposes, allow bypass if Supabase is not configured or login fails
-      if (error.message.includes('apikey') || error.message.includes('URL') || error.message.includes('Invalid login credentials')) {
-         alert('演示模式：检测到登录失败，将使用模拟登录进入系统。');
+      console.error('认证错误:', error);
+      // For demo purposes, allow bypass if Supabase is not configured
+      if (error.message.includes('apikey') || error.message.includes('URL')) {
+         alert('演示模式：检测到 Supabase 未配置，将使用模拟登录进入系统。');
          localStorage.setItem('demo_user', 'true');
          navigate('/app');
       } else {
