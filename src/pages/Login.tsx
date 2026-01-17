@@ -40,6 +40,12 @@ export default function Login() {
     try {
       console.log('开始认证流程:', { email, isRegister });
       
+      // 检查输入是否为空
+      if (!email || !password) {
+        alert('请输入邮箱和密码');
+        return;
+      }
+      
       if (isRegister) {
         console.log('开始注册流程');
         const { error } = await supabase.auth.signUp({
@@ -54,12 +60,24 @@ export default function Login() {
         setIsRegister(false);
       } else {
         console.log('开始登录流程');
+        console.log('登录凭证:', { email, password: '***' });
+        
+        // 检查Supabase客户端是否正确初始化
+        console.log('Supabase客户端:', supabase);
+        console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+        console.log('Supabase Anon Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '***' : '未设置');
+        
         const { data: authData, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) {
           console.error('登录错误:', error);
+          console.error('错误详情:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+          });
           throw error;
         }
 
@@ -96,6 +114,11 @@ export default function Login() {
       }
     } catch (error: any) {
       console.error('认证错误:', error);
+      console.error('错误详情:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      });
       // 显示具体的错误信息，而不是自动进入演示模式
       alert(error.message || '登录失败');
     } finally {
