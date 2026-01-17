@@ -16,5 +16,14 @@ export default defineConfig({
     strictPort: false, // 禁用严格端口检查
     cors: true, // 允许跨域请求
     open: true, // 自动打开浏览器
+    proxy: {
+      // 为阿里云API添加代理，解决CORS问题
+      '/api/v1/services/aigc/text2image/generation': {
+        target: 'https://dashscope.aliyuncs.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path,
+      },
+    },
   },
 })

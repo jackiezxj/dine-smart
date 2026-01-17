@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, RefreshCw, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { generateImage as generateAIImage } from '@/lib/aiImageService';
 import { Helmet } from 'react-helmet-async';
 
 // 添加阿里云API类型定义
@@ -36,37 +37,24 @@ export default function AdminImageGeneration() {
     setErrorMessage(null);
     
     try {
-      // 调用Vercel Serverless Function生成图片
-      const response = await fetch('/api/image-generation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ description })
-      });
+      // 直接调用AI图片生成服务
+      const imageUrl = await generateAIImage(description);
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        // 成功生成图片
-        if (data.imageUrl) {
-          setGeneratedImage(data.imageUrl);
-          
-          // 上报GA事件
-          if (window.gtag) {
-            window.gtag('event', 'image_generated', {
-              'event_category': 'admin_interaction',
-              'event_label': 'food_image_generation',
-              'value': 1,
-              'description': description
-            });
-          }
-        } else {
-          setErrorMessage('生成图片失败，请重试');
+      // 成功生成图片
+      if (imageUrl) {
+        setGeneratedImage(imageUrl);
+        
+        // 上报GA事件
+        if (window.gtag) {
+          window.gtag('event', 'image_generated', {
+            'event_category': 'admin_interaction',
+            'event_label': 'food_image_generation',
+            'value': 1,
+            'description': description
+          });
         }
       } else {
-        // API返回错误
-        setErrorMessage(data.error || '生成图片失败，请重试');
+        setErrorMessage('生成图片失败，请重试');
       }
     } catch (err) {
       console.error('Error generating image:', err);

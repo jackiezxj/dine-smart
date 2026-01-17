@@ -1,5 +1,5 @@
-// 使用CommonJS的导出格式
-const { createClient } = require('@supabase/supabase-js');
+// 使用ES模块的导入格式
+import { createClient } from '@supabase/supabase-js';
 
 // 创建Supabase客户端
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
@@ -19,7 +19,8 @@ if (process.env.NODE_ENV === 'development') {
   console.log('API route initialized');
 }
 
-module.exports = async function handler(request, response) {
+// 使用ES模块的导出格式
+export default async function handler(request, response) {
   // 添加CORS头部
   addCorsHeaders(response);
 
