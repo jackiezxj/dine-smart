@@ -1,24 +1,75 @@
-import { createClient } from '@supabase/supabase-js';
+// 使用CommonJS的导出格式
+const { createClient } = require('@supabase/supabase-js');
 
 // 创建Supabase客户端
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default async function handler(request, response) {
+// 添加CORS头部
+function addCorsHeaders(response) {
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  return response;
+}
+
+// 处理OPTIONS请求
+if (process.env.NODE_ENV === 'development') {
+  console.log('API route initialized');
+}
+
+module.exports = async function handler(request, response) {
+  // 添加CORS头部
+  addCorsHeaders(response);
+
+  // 处理OPTIONS请求
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
+
+  // 只允许POST请求
   if (request.method !== 'POST') {
+    console.error('Method not allowed:', request.method);
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
+    console.log('Received request:', request.method, request.url);
+    console.log('Request headers:', request.headers);
+
     // 从请求体获取描述
-    const { description } = await request.json();
+    let requestBody;
+    try {
+      requestBody = await new Promise((resolve, reject) => {
+        let body = '';
+        request.on('data', chunk => {
+          body += chunk.toString();
+        });
+        request.on('end', () => {
+          try {
+            resolve(body ? JSON.parse(body) : {});
+          } catch (err) {
+            reject(new Error('Invalid JSON body'));
+          }
+        });
+        request.on('error', reject);
+      });
+      console.log('Request body:', requestBody);
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      return response.status(400).json({ error: 'Invalid JSON body' });
+    }
+
+    const { description } = requestBody;
     
     if (!description || description.length > 30) {
+      console.error('Invalid description:', description);
       return response.status(400).json({ error: '描述不能为空且不能超过30字' });
     }
 
     // 从Supabase获取API密钥
+    console.log('Fetching API key from Supabase...');
     const { data: apiKeyData, error: apiKeyError } = await supabase
       .from('api_keys')
       .select('api_key')
@@ -32,12 +83,15 @@ export default async function handler(request, response) {
     }
 
     if (!apiKeyData) {
+      console.error('API key not found');
       return response.status(500).json({ error: '未找到API密钥' });
     }
 
     const apiKey = apiKeyData.api_key;
+    console.log('API key fetched successfully');
 
     // 调用阿里云DashScope API生成图片
+    console.log('Calling Aliyun DashScope API...');
     const apiResponse = await fetch('https://dashscope.aliyuncs.com/api/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -56,7 +110,11 @@ export default async function handler(request, response) {
       })
     });
 
+    console.log('API response status:', apiResponse.status);
+    console.log('API response headers:', apiResponse.headers);
+
     const data = await apiResponse.json();
+    console.log('API response data:', data);
 
     if (!apiResponse.ok) {
       console.error('API error:', data);
@@ -64,8 +122,10 @@ export default async function handler(request, response) {
     }
 
     if (data.output && data.output.results && data.output.results.length > 0) {
+      console.log('Image generated successfully:', data.output.results[0].url);
       return response.status(200).json({ imageUrl: data.output.results[0].url });
     } else {
+      console.error('Invalid API response:', data);
       return response.status(500).json({ error: '生成图片失败，请重试' });
     }
   } catch (error) {
