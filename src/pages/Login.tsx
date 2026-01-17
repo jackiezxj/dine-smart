@@ -96,14 +96,8 @@ export default function Login() {
       }
     } catch (error: any) {
       console.error('认证错误:', error);
-      // For demo purposes, allow bypass if Supabase is not configured or login fails
-      if (error.message.includes('apikey') || error.message.includes('URL') || error.message.includes('Invalid login credentials')) {
-         alert('演示模式：检测到登录失败，将使用模拟登录进入系统。');
-         localStorage.setItem('demo_user', 'true');
-         navigate('/app');
-      } else {
-         alert(error.message || '登录失败');
-      }
+      // 显示具体的错误信息，而不是自动进入演示模式
+      alert(error.message || '登录失败');
     } finally {
       setLoading(false);
     }
