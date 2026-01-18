@@ -48,7 +48,7 @@ export default function Login() {
       
       if (isRegister) {
         console.log('开始注册流程');
-        const { error } = await supabase.auth.signUp({
+        const { data: authData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -56,6 +56,29 @@ export default function Login() {
           }
         });
         if (error) throw error;
+        
+        console.log('注册成功，获取用户信息:', authData);
+        const userId = authData?.user?.id;
+        
+        if (userId) {
+          console.log('在profiles表中创建用户记录:', userId);
+          // 在profiles表中创建用户记录
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              username: email.split('@')[0],
+              is_admin: false
+            });
+          
+          if (profileError) {
+            console.error('创建用户资料失败:', profileError);
+            // 即使创建用户资料失败，也允许注册成功
+          } else {
+            console.log('创建用户资料成功');
+          }
+        }
+        
         alert('注册成功！请登录。');
         setIsRegister(false);
       } else {
@@ -91,24 +114,47 @@ export default function Login() {
         }
 
         console.log('获取用户ID成功:', userId);
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', userId)
-          .single();
+        
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', userId)
+            .single();
 
-        if (profileError) {
-          console.error('获取用户资料错误:', profileError);
-          navigate('/app');
-          return;
-        }
+          if (profileError) {
+            console.error('获取用户资料错误:', profileError);
+            // 如果profiles表中没有记录，创建一个新记录
+            const { error: createProfileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: userId,
+                username: email.split('@')[0],
+                is_admin: false
+              });
+            
+            if (createProfileError) {
+              console.error('创建用户资料失败:', createProfileError);
+            } else {
+              console.log('创建用户资料成功');
+            }
+            
+            // 无论是否获取到用户资料，都跳转到普通用户页面
+            navigate('/app');
+            return;
+          }
 
-        console.log('获取用户资料成功:', profile);
-        if (profile?.is_admin) {
-          console.log('用户是管理员，跳转到管理员页面');
-          navigate('/admin');
-        } else {
-          console.log('用户是普通用户，跳转到普通用户页面');
+          console.log('获取用户资料成功:', profile);
+          if (profile?.is_admin) {
+            console.log('用户是管理员，跳转到管理员页面');
+            navigate('/admin');
+          } else {
+            console.log('用户是普通用户，跳转到普通用户页面');
+            navigate('/app');
+          }
+        } catch (error: any) {
+          console.error('获取用户资料过程中发生错误:', error);
+          // 即使发生错误，也允许用户登录
           navigate('/app');
         }
       }
