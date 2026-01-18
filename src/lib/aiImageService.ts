@@ -40,10 +40,17 @@ export const generateImage = async (prompt: string): Promise<string> => {
       if (!response.ok) {
         let errorDetails = '';
         try {
-          const errorData = await response.json();
-          errorDetails = `，详细信息: ${JSON.stringify(errorData)}`;
-        } catch (e) {
-          errorDetails = `，响应文本: ${await response.text()}`;
+          const text = await response.text();
+          if (text) {
+            try {
+              const errorData = JSON.parse(text);
+              errorDetails = `，详细信息: ${JSON.stringify(errorData)}`;
+            } catch {
+              errorDetails = `，响应文本: ${text}`;
+            }
+          }
+        } catch {
+          errorDetails = '';
         }
         throw new Error(`API请求失败: ${response.status} ${response.statusText}${errorDetails}`);
       }
@@ -121,14 +128,19 @@ export const generateImage = async (prompt: string): Promise<string> => {
     });
 
     if (!response.ok) {
-      // 获取详细的错误信息
       let errorDetails = '';
       try {
-        const errorData = await response.json();
-        errorDetails = `，详细信息: ${JSON.stringify(errorData)}`;
-      } catch (e) {
-        // 如果无法解析JSON，使用文本格式
-        errorDetails = `，响应文本: ${await response.text()}`;
+        const text = await response.text();
+        if (text) {
+          try {
+            const errorData = JSON.parse(text);
+            errorDetails = `，详细信息: ${JSON.stringify(errorData)}`;
+          } catch {
+            errorDetails = `，响应文本: ${text}`;
+          }
+        }
+      } catch {
+        errorDetails = '';
       }
       throw new Error(`API请求失败: ${response.status} ${response.statusText}${errorDetails}`);
     }
