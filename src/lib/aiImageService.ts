@@ -26,9 +26,8 @@ export const fetchApiKey = async (): Promise<string | null> => {
 
 // 图片生成API调用
 export const generateImage = async (prompt: string): Promise<string> => {
-  // 使用代理URL，解决CORS问题
-  // 阿里云dashscope API的正确endpoint
-  const apiUrl = '/api/v1/services/aigc/text2image/generation';
+  // 使用Vite代理到阿里云 DashScope 文生图服务
+  const apiUrl = '/api/v1/services/aigc/multimodal-generation/generation';
   
   // 构造完整的提示词
   const fullPrompt = `你是一个专业的美食视觉生成模型，擅长将简短的文字描述转化为高质量、极具食欲感的美食图片。
@@ -64,23 +63,30 @@ export const generateImage = async (prompt: string): Promise<string> => {
       throw new Error('API key未配置');
     }
 
-    // 根据阿里云dashscope API文档，调整请求格式
+    // 根据阿里云 DashScope 文生图最新接口规范构造请求
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'qwen-image-max',
         input: {
-          prompt: fullPrompt
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { text: fullPrompt },
+              ],
+            },
+          ],
         },
         parameters: {
-          aspect_ratio: '9:16',
-          n: 1
-        }
-      })
+          size: '720*1280',
+          n: 1,
+        },
+      }),
     });
 
     if (!response.ok) {
@@ -98,12 +104,28 @@ export const generateImage = async (prompt: string): Promise<string> => {
 
     const data = await response.json();
     console.log('API返回数据:', data);
-    
-    if (data.output && data.output.results && data.output.results.length > 0) {
-      return data.output.results[0].url;
-    } else {
-      throw new Error('API返回格式错误，详细信息: ' + JSON.stringify(data));
+
+    let imageUrl: string | undefined;
+
+    if (data.output && data.output.results && data.output.results.length > 0 && data.output.results[0].url) {
+      imageUrl = data.output.results[0].url;
+    } else if (Array.isArray(data.output?.choices) && data.output.choices.length > 0) {
+      const choice = data.output.choices[0];
+      const contents = choice.message?.content;
+      if (Array.isArray(contents)) {
+        const imageItem = contents.find((item: any) => typeof item.image === 'string' && item.image);
+        if (imageItem) {
+          imageUrl = imageItem.image;
+        }
+      }
     }
+
+    if (imageUrl) {
+      const cleanedUrl = imageUrl.trim().replace(/^`+|`+$/g, '');
+      return cleanedUrl;
+    }
+
+    throw new Error('API返回格式错误，详细信息: ' + JSON.stringify(data));
   } catch (error) {
     console.error('图片生成API错误:', error);
     throw error;

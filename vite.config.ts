@@ -18,11 +18,10 @@ export default defineConfig({
     open: true, // 自动打开浏览器
     proxy: {
       // 为阿里云API添加代理，解决CORS问题
-      '/api/v1/services/aigc/text2image/generation': {
+      '/api': {
         target: 'https://dashscope.aliyuncs.com',
         changeOrigin: true,
         secure: true,
-        rewrite: (path) => path,
       },
       // 为/api/image-generation路径添加代理，解决旧代码的兼容性问题
       '/api/image-generation': {
