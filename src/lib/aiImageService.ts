@@ -24,12 +24,43 @@ export const fetchApiKey = async (): Promise<string | null> => {
   }
 };
 
-// 图片生成API调用
 export const generateImage = async (prompt: string): Promise<string> => {
-  // 使用Vite代理到阿里云 DashScope 文生图服务
+  const isDev = import.meta.env.DEV;
+
+  if (!isDev) {
+    try {
+      const response = await fetch('/api/image-generation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: prompt.trim() }),
+      });
+
+      if (!response.ok) {
+        let errorDetails = '';
+        try {
+          const errorData = await response.json();
+          errorDetails = `，详细信息: ${JSON.stringify(errorData)}`;
+        } catch (e) {
+          errorDetails = `，响应文本: ${await response.text()}`;
+        }
+        throw new Error(`API请求失败: ${response.status} ${response.statusText}${errorDetails}`);
+      }
+
+      const data = await response.json();
+      if (data.imageUrl && typeof data.imageUrl === 'string') {
+        return data.imageUrl;
+      }
+
+      throw new Error('API返回格式错误，详细信息: ' + JSON.stringify(data));
+    } catch (error) {
+      console.error('图片生成API错误:', error);
+      throw error;
+    }
+  }
+
   const apiUrl = '/api/v1/services/aigc/multimodal-generation/generation';
-  
-  // 构造完整的提示词
   const fullPrompt = `你是一个专业的美食视觉生成模型，擅长将简短的文字描述转化为高质量、极具食欲感的美食图片。
 任务规则：
 用户将输入一段不超过30字的中文描述。
