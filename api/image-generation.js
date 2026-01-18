@@ -1,9 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 function addCorsHeaders(response) {
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -56,6 +52,15 @@ module.exports = async function handler(request, response) {
     if (!description || description.length > 30) {
       return response.status(400).json({ error: '描述不能为空且不能超过30字' });
     }
+
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return response.status(500).json({ error: 'Supabase配置缺失，请检查环境变量' });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     const { data: apiKeyData, error: apiKeyError } = await supabase
       .from('api_keys')
