@@ -68,55 +68,89 @@ supabase.auth.signInWithPassword = async function(credentials: { email: string; 
   }
 };
 
-// 为supabase.from添加日志
+// 为supabase.from添加日志和错误处理
 const originalFrom = supabase.from;
 supabase.from = (table: string) => {
-  console.log('调用supabase.from:', table);
-  const realTable = originalFrom(table);
-  
-  // 为profiles表的select方法添加日志
-  if (table === 'profiles') {
-    const originalSelect = realTable.select;
-    realTable.select = function(...args: any[]) {
-      console.log('调用profiles.select:', args);
-      const realSelectResult = originalSelect.apply(this, args);
-      
-      // 为eq方法添加日志
-      const originalEq = realSelectResult.eq;
-      realSelectResult.eq = function(column: string, value: any) {
-        console.log('调用profiles.select.eq:', column, value);
-        const realEqResult = originalEq.apply(this, [column, value]);
+  try {
+    console.log('调用supabase.from:', table);
+    
+    // 检查originalFrom是否存在
+    if (!originalFrom) {
+      console.error('originalFrom不存在，无法调用supabase.from');
+      throw new Error('Supabase客户端未正确初始化');
+    }
+    
+    const realTable = originalFrom(table);
+    
+    // 检查realTable是否存在
+    if (!realTable) {
+      console.error('无法获取真实的表对象:', table);
+      throw new Error(`无法获取表 ${table}`);
+    }
+    
+    // 为profiles表的select方法添加日志
+    if (table === 'profiles' && realTable.select) {
+      const originalSelect = realTable.select;
+      realTable.select = function(...args: any[]) {
+        console.log('调用profiles.select:', args);
         
-        // 为single方法添加日志
-        const originalSingle = realEqResult.single;
-        realEqResult.single = async function() {
-          console.log('调用profiles.select.eq.single');
-          try {
-            const result = await originalSingle.apply(this);
-            if (result.error) {
-              console.error('获取用户资料失败:', result.error);
-            } else {
-              console.log('获取用户资料成功:', {
-                id: result.data?.id,
-                username: result.data?.username,
-                is_admin: result.data?.is_admin,
-              });
-            }
-            return result;
-          } catch (error: any) {
-            console.error('获取用户资料过程中发生错误:', error);
-            throw error;
+        try {
+          const realSelectResult = originalSelect.apply(this, args);
+          
+          // 为eq方法添加日志
+          if (realSelectResult && realSelectResult.eq) {
+            const originalEq = realSelectResult.eq;
+            realSelectResult.eq = function(column: string, value: any) {
+              console.log('调用profiles.select.eq:', column, value);
+              
+              try {
+                const realEqResult = originalEq.apply(this, [column, value]);
+                
+                // 为single方法添加日志
+                if (realEqResult && realEqResult.single) {
+                  const originalSingle = realEqResult.single;
+                  realEqResult.single = async function() {
+                    console.log('调用profiles.select.eq.single');
+                    try {
+                      const result = await originalSingle.apply(this);
+                      if (result.error) {
+                        console.error('获取用户资料失败:', result.error);
+                      } else {
+                        console.log('获取用户资料成功:', {
+                          id: result.data?.id,
+                          username: result.data?.username,
+                          is_admin: result.data?.is_admin,
+                        });
+                      }
+                      return result;
+                    } catch (error: any) {
+                      console.error('获取用户资料过程中发生错误:', error);
+                      throw error;
+                    }
+                  };
+                }
+                
+                return realEqResult;
+              } catch (error: any) {
+                console.error('调用profiles.select.eq时发生错误:', error);
+                throw error;
+              }
+            };
           }
-        };
-        
-        return realEqResult;
+          
+          return realSelectResult;
+        } catch (error: any) {
+          console.error('调用profiles.select时发生错误:', error);
+          throw error;
+        }
       };
-      
-      return realSelectResult;
-    };
+    }
+    
+    return realTable;
+  } catch (error: any) {
+    console.error('调用supabase.from时发生错误:', error);
+    throw error;
   }
-  
-  return realTable;
 };
 
 // Mock Data for demonstration when no backend is connected

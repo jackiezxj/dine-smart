@@ -120,15 +120,17 @@ export default function Login() {
         details: error.details,
       });
       
-      // 当遇到 invalid_credentials 错误时，允许用户直接进入系统，但显示警告信息
-      if (error.code === 'invalid_credentials') {
-        alert('警告：登录凭证无效，但系统将允许您进入演示模式。\n\n请注意，这是一个临时解决方案，建议您检查您的登录凭证或联系管理员。');
-        localStorage.setItem('demo_user', 'true');
-        navigate('/app');
-      } else {
-        // 显示具体的错误信息
-        alert(error.message || '登录失败');
-      }
+      // 显示具体的错误信息，不再自动进入系统
+      alert(error.message || '登录失败');
+      
+      // 记录错误详情
+      console.error('登录失败详情:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        email: email,
+        timestamp: new Date().toISOString(),
+      });
     } finally {
       setLoading(false);
     }
