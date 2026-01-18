@@ -24,7 +24,7 @@ console.log('Supabase客户端初始化:', {
 
 // 为supabase.auth.signInWithPassword添加日志
 const originalSignInWithPassword = supabase.auth.signInWithPassword;
-supabase.auth.signInWithPassword = async (credentials: { email: string; password: string }) => {
+supabase.auth.signInWithPassword = async function(credentials: { email: string; password: string }) {
   console.log('开始登录流程:', {
     email: credentials.email,
     password: '***',
@@ -34,7 +34,7 @@ supabase.auth.signInWithPassword = async (credentials: { email: string; password
   try {
     // 尝试使用真实的Supabase认证服务
     console.log('尝试调用Supabase auth.signInWithPassword');
-    const result = await originalSignInWithPassword(credentials);
+    const result = await originalSignInWithPassword.apply(this, [credentials]);
     
     if (result.error) {
       console.error('Supabase认证失败:', {
