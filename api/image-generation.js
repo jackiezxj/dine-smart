@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 function addCorsHeaders(response) {
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,7 +7,7 @@ function addCorsHeaders(response) {
   return response;
 }
 
-module.exports = async function handler(request, response) {
+export default async function handler(request, response) {
   addCorsHeaders(response);
 
   if (request.method === 'OPTIONS') {
@@ -111,4 +111,4 @@ module.exports = async function handler(request, response) {
   } catch (error) {
     return response.status(500).json({ error: '生成图片失败，请检查网络连接并重试' });
   }
-};
+}
