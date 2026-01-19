@@ -1,5 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
+export const config = {
+  runtime: 'nodejs',
+};
+
 function addCorsHeaders(response) {
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -53,8 +57,8 @@ export default async function handler(request, response) {
       return response.status(400).json({ error: '描述不能为空且不能超过30字' });
     }
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
       return response.status(500).json({ error: 'Supabase配置缺失，请检查环境变量' });
