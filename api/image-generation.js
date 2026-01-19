@@ -61,7 +61,19 @@ export default async function handler(request, response) {
     const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      return response.status(500).json({ error: 'Supabase配置缺失，请检查环境变量' });
+      return response.status(500).json({
+        error: 'Supabase配置缺失，请检查环境变量',
+        env: {
+          hasViteSupabaseUrl: Boolean(process.env.VITE_SUPABASE_URL),
+          hasViteSupabaseAnonKey: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
+          hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
+          hasSupabaseAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
+          hasNextPublicSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+          hasNextPublicSupabaseAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+          vercelEnv: process.env.VERCEL_ENV || null,
+          vercelUrl: process.env.VERCEL_URL || null,
+        },
+      });
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
